@@ -1,0 +1,44 @@
+{% extends "main.html" %}
+{% block body %}
+<h1>Pyramide</h1>
+<div id="triangle">
+  <form action="/">
+    <input type="submit" value="Nowa gra">
+  </form>
+  <table class="board">
+  <img src="{{ url_for('static', filename='1.png') }}">
+    {% for row in range(5) %}
+      <tr>
+        {% for i in range(5) %}
+          <td>
+              <span>{{row}},{{i}}</span>
+              </form>
+          </td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </table>
+  </div>
+  <div id="wspolrzedne">
+        {% if m %}
+          <p id="alert">{{m}}</p>
+        {% endif %}
+          {% if tura == 'gracz1' %}
+          <p> Gracz 1 </p>
+          <form action="/ruch" method="post">
+            <input type="text" id="x" name="x" pattern=[0-6]{1} required>
+            <input type="text" id="y" name="y" pattern=[0-6]{1} required>
+            <input type="submit" value="Ruch">
+          </form>
+          {% endif %}
+           {% if tura =='gracz2' %}
+            <p> Gracz 2 </p>
+            <form action="/ruch" method="post">
+              <input type="text" id="x" name="x" pattern=[0-6]{1} required>
+              <input type="text" id="y" name="y" pattern=[0-6]{1} required>
+              <input type="submit" value="Ruch">
+            </form>
+            {% endif %}
+          {% endif %}
+  </div>
+{% endblock %}
