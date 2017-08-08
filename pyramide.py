@@ -1,132 +1,205 @@
+#flask/bin/python
 # -*- coding: utf-8 -*-
-from flask import Flask, render_template, request
-from static import board
+from flask import Flask
+from flask import request
+from flask import render_template
+import board
 
 app = Flask(__name__)
 
 class Plansza:
     def __init__(self):
-        self.t = board.p
+        self.tablica = board.p
+        self.skreslenia = board.r
+        self.slownik = board.s
+
+    def skresl(self, skreslenie, gracz):
+        w = self.slownik[skreslenie]
+        if  self.skreslenia[w[0]][w[1]] == -1:
+            self.skreslenia[w[0]][w[1]] = gracz
+            return gracz
+        else:
+            return -2
+
+    def czyje(self):
+        slownik = {}
+        i=1
+        for wiersz in self.skreslenia:
+            for kolumna in wiersz:
+                slownik[i] = kolumna
+                i+=1
+        return slownik
+
+    def nowa(self):
+        from importlib import reload
+        reload(board)
+        self.tablica = board.p
+        self.skreslenia = board.r
+        self.slownik = board.s
 
     def __call__(self):
-        return self.t
-class Zaznaczenie:
-    def __init__(self):
-        self.x = ['x','o']
-    def __call__(self):
-        return self.x
-class Gracz1:
-    def __init__(self):
-        self.pierwszy = gracz.pierwszy
+        return self.tablica
 
-    def __call__(self):
-        return self.pierwszy
-class Gracz2:
+class Wiadomosc:
     def __init__(self):
-        self.drugi = gracz.drugi
-
-    def __call__(self):
-        return self.drugi
-class Wygrana:
-    def __init__(self):
-        self.wygra = [
-        'Wygrał Gracz 1', 
-        'Wygrał Gracz 2'
+        self.wypisz =[
+        'Nie oszukuj!',
+        'Koniec gry! wygrał gracz 1',
+        'Koniec gry! wygrał gracz 2'
         ]
 
     def __call__(self):
-        return self.wygra
+        return self.wypisz
+
+class Gracz:
+    def __init__(self):
+        self.punkty = 0
+
+    def __dodaj__(self, punkty):
+        self.punkty += punkty
+
+    def __call__(self):
+        return self.punkty
 
 @app.route('/', methods=['POST', 'GET'])
 def main():
-    board.p = [[1],
-    [2, 3],
-    [4, 5, 6],
-    [7, 8, 9, 10],
-    [11, 12, 13, 14, 15],
-    [16, 17, 18, 19, 20, 21]]
-    punkty.gracz1 = 0
-    punkty.gracz2 = 0
-    wolne.pola = 21
-    wybor.tura = 'gracz1'
-    return render_template('main.html')
+    return render_template('index.html')
 
 @app.route("/start", methods=['POST', 'GET'])
 def start():
+    global gracze, tura, plansza
     plansza = Plansza()
-    return render_template('plansza.html', plansza=plansza(), tura=wybor.tura)
+    plansza.nowa()
+    gracze = list()
+    gracze.append( Gracz() )
+    gracze.append( Gracz() )
+    tura = 0
+    return render_template('plansza.html', plansza=plansza(), skreslenia=plansza.czyje(), tura=tura, g0=0, g1=0)
 
-@app.route('/ruch' , methods=['POST', 'GET'])
-def ruch():
-    plansza = Plansza()
-    gracz1 = Gracz1()
-    gracz2 = Gracz2()
-    zazn = Zaznaczenie()
-    wygrana = Wygrana()
-    zmiana = 0
-    z = None
-    m = None
+@app.route('/ruch/<int:skreslenie>' , methods=['POST', 'GET'])
+def ruch(skreslenie):
+    global gracze, tura, plansza
+    wiadomosc = Wiadomosc()
+    m = None 
+    p0 = 0
+    p1 = 0
+    print(plansza.skreslenia)
+    """
+    warunki czy można skreślić dane pole
+    """
+    #plansza.skresl(skreslenie, tura)
+    if plansza.skresl(skreslenie, tura) not in (0,1):
+        m = wiadomosc.wypisz[0]
+        return render_template('oszukista.html', m =m)
+    print(plansza.skreslenia)
+    """
+    warunek stopu gry + zmiana templatki
+    """
+    znalezione = 0
+    for w in plansza.skreslenia:
+        for k in w:
+            if(k == -1):
+                znalezione = 1
+    if znalezione == 0:
+        """
+        liczenie punktów graczy
+        """
 
-    if wybor.tura == 'gracz1':
-        if request_method == 'POST':
-                wolne.pola = wolne.pola - 1
-                z = zazn.x[0]
-                x = int(request.form['x'])
-                y = int(request.form['y'])
-                if plansza.t[x][y] == 1:
-                    punkty.gracz1 += 1
-                elif plansza.t[x][y] == 2 or plansza.t[x][y] == 3:
-                    punkty.gracz1 += 2
-                elif plansza.t[x][y] >= 4 and plansza.t[x][y] <= 6:
-                    punkty.gracz1 += 3
-                elif plansza.t[x][y] >= 7 and plansza.t[x][y] <= 10:
-                    punkty.gracz1 += 4
-                elif plansza.t[x][y] >= 11 and plansza.t[x][y] <= 15:
-                    punkty.gracz1 += 5
-                else:
-                    punkty.gracz1 += 6
-                if z == zazn.x[0]: plansza.t[x][y] = zazn.x[0]
+        #punkty gracza 0
 
-    if wybor.tura == 'gracz2':
-        if request_method == 'POST':
-                wolne.pola = wolne.pola - 1
-                z = zazn.x[1]
-                x = int(request.form['x'])
-                y = int(request.form['y'])
-                zmiana = 1
-                if plansza.t[x][y] == 1:
-                    punkty.gracz2 += 1
-                elif plansza.t[x][y] == 2 or plansza.t[x][y] == 3:
-                    punkty.gracz2 += 2
-                elif plansza.t[x][y] >= 4 and plansza.t[x][y] <= 6:
-                    punkty.gracz2 += 3
-                elif plansza.t[x][y] >= 7 and plansza.t[x][y] <= 10:
-                    punkty.gracz2 += 4
-                elif plansza.t[x][y] >= 11 and plansza.t[x][y] <= 15:
-                    punkty.gracz2 += 5
-                else:
-                    punkty.gracz2 += 6
-                if z == zazn.x[1]: plansza.t[x][y] = zazn.x[1]
+        if plansza.skreslenia[0][0] == 0:
+            p0 += 1
+        if plansza.skreslenia[0][0] == 0 and plansza.skreslenia[1][0] == 0 and plansza.skreslenia[2][0] == 0 and plansza.skreslenia[3][0] == 0 and plansza.skreslenia[4][0] == 0 and plansza.skreslenia[5][0] == 0:
+            p0 += 41
+        if plansza.skreslenia[1][1] == 0 and plansza.skreslenia[2][1] == 0 and plansza.skreslenia[3][1] == 0 and plansza.skreslenia[4][1] == 0 and plansza.skreslenia[5][1] == 0:
+            p0 += 45
+        if plansza.skreslenia[2][2] == 0 and plansza.skreslenia[3][2] == 0 and plansza.skreslenia[4][2] == 0 and plansza.skreslenia[5][2] == 0:
+            p0 += 46
+        if plansza.skreslenia[3][3] ==0 and plansza.skreslenia[4][3] == 0 and plansza.skreslenia[5][3] == 0:
+            p0 += 43
+        if plansza.skreslenia[4][4] == 0 and plansza.skreslenia[5][4] == 0:
+            p0 += 35
+        if plansza.skreslenia[5][5] == 0:
+            p0 += 21
 
-    board.p = plansza()
-    gracz.pierwszy = gracz1()
-    gracz.drugi = gracz2()
+        if plansza.skreslenia[0][0] == 0 and plansza.skreslenia[1][1] == 0 and plansza.skreslenia[2][2] == 0 and plansza.skreslenia[3][3] == 0 and plansza.skreslenia[4][4] == 0 and plansza.skreslenia[5][5] == 0:
+            p0 += 56
+        if plansza.skreslenia[1][0] == 0 and plansza.skreslenia[2][1] == 0 and plansza.skreslenia[3][2] == 0 and plansza.skreslenia[4][3] == 0 and plansza.skreslenia[5][4] == 0:
+            p0 += 50
+        if plansza.skreslenia[2][0] == 0 and plansza.skreslenia[3][1] == 0 and plansza.skreslenia[4][2] == 0 and plansza.skreslenia[5][3] ==0:
+            p0 += 44
+        if plansza.skreslenia[3][0] == 0 and plansza.skreslenia[4][1] ==0 and plansza.skreslenia[5][2] == 0:
+            p0 += 37
+        if plansza.skreslenia[4][0] == 0 and plansza.skreslenia[5][1] == 0:
+            p0 += 28
+        if plansza.skreslenia[5][0] == 0:
+            p0 += 16
 
-    if zmiana == 1:
-        if wybor.tura == 'gracz1':
-            wybor.tura = 'gracz2'
+        if plansza.skreslenia[1][0] ==0 and plansza.skreslenia[1][1] == 0:
+            p0 += 5
+        if plansza.skreslenia[2][0] == 0 and plansza.skreslenia[2][1] == 0 and plansza.skreslenia[2][2] == 0:
+            p0 += 15
+        if plansza.skreslenia[3][0] == 0 and plansza.skreslenia[3][1] == 0 and plansza.skreslenia[3][2] == 0 and plansza.skreslenia[3][3] ==0:
+            p0 += 34
+        if plansza.skreslenia[4][0] == 0 and plansza.skreslenia[4][1] == 0 and plansza.skreslenia[4][2] == 0 and plansza.skreslenia[4][3] == 0 and plansza.skreslenia[4][4] == 0:
+            p0 += 65
+        if plansza.skreslenia[5][0] == 0 and plansza.skreslenia[5][1] == 0 and plansza.skreslenia[5][2] == 0 and plansza.skreslenia[5][3] == 0 and plansza.skreslenia[5][4] == 9 and plansza.skreslenia[5][5] == 0:
+            p0 += 111
+
+        #pukty gracza1 
+
+        if plansza.skreslenia[0][0] == 1:
+            p1 += 1
+        if plansza.skreslenia[0][0] == 1 and plansza.skreslenia[1][0] == 1 and plansza.skreslenia[2][0] == 1 and plansza.skreslenia[3][0] == 1 and plansza.skreslenia[4][0] == 1 and plansza.skreslenia[5][0] == 1:
+            p1 += 41
+        if plansza.skreslenia[1][1] == 1 and plansza.skreslenia[2][1] == 1 and plansza.skreslenia[3][1] == 1 and plansza.skreslenia[4][1] == 1 and plansza.skreslenia[5][1] == 1:
+            p1 += 45
+        if plansza.skreslenia[2][2] == 1 and plansza.skreslenia[3][2] == 1 and plansza.skreslenia[4][2] == 1 and plansza.skreslenia[5][2] == 1:
+            p1 += 46
+        if plansza.skreslenia[3][3] == 1 and plansza.skreslenia[4][3] == 1 and plansza.skreslenia[5][3] == 1:
+            p1 += 43
+        if plansza.skreslenia[4][4] == 1 and plansza.skreslenia[5][4] == 1:
+            p1 += 35
+        if plansza.skreslenia[5][5] == 1:
+            p1 += 21
+
+        if plansza.skreslenia[0][0] == 1 and plansza.skreslenia[1][1] == 1 and plansza.skreslenia[2][2] == 1 and plansza.skreslenia[3][3] == 1 and plansza.skreslenia[4][4] == 1 and plansza.skreslenia[5][5] == 1:
+            p1 += 56
+        if plansza.skreslenia[1][0] == 1 and plansza.skreslenia[2][1] == 1 and plansza.skreslenia[3][2] == 1 and plansza.skreslenia[4][3] == 1 and plansza.skreslenia[5][4] == 1:
+            p1 += 50
+        if plansza.skreslenia[2][0] == 1 and plansza.skreslenia[3][1] == 1 and plansza.skreslenia[4][2] == 1 and plansza.skreslenia[5][3] == 1:
+            p1 += 44
+        if plansza.skreslenia[3][0] == 1 and plansza.skreslenia[4][1] == 1 and plansza.skreslenia[5][2] == 1:
+            p1 += 37
+        if plansza.skreslenia[4][0] == 1 and plansza.skreslenia[5][1] == 1:
+            p1 += 28
+        if plansza.skreslenia[5][0] == 1:
+            p1 += 16
+
+        if plansza.skreslenia[1][0] == 1 and plansza.skreslenia[1][1] == 1:
+            p1 += 5
+        if plansza.skreslenia[2][0] == 1 and plansza.skreslenia[2][1] == 1 and plansza.skreslenia[2][2] == 1:
+            p1 += 15
+        if plansza.skreslenia[3][0] == 1 and plansza.skreslenia[3][1] == 1 and plansza.skreslenia[3][2] == 1 and plansza.skreslenia[3][3] == 1:
+            p1 += 34
+        if plansza.skreslenia[4][0] == 1 and plansza.skreslenia[4][1] == 1 and plansza.skreslenia[4][2] == 1 and plansza.skreslenia[4][3] == 1 and plansza.skreslenia[4][4] == 1:
+            p1 += 65
+        if plansza.skreslenia[5][0] == 1 and plansza.skreslenia[5][1] == 1 and plansza.skreslenia[5][2] == 1 and plansza.skreslenia[5][3] == 1 and plansza.skreslenia[5][4] == 1 and plansza.skreslenia[5][5] == 1:
+            p1 += 111
+
+        #warunki wygranej
+
+        if p0 > p1:
+            m = wiadomosc.wypisz[1] 
         else:
-            wybor.tura = 'gracz1'
-
-    if wolne.pola == 0:
-        if punkty.gracz1 > punkty.gracz2:
-            m = wygrana.wygra[0]
-            return render_template('wygrana.html', m=m)
-        else:
-            m = wygrana.wygra[1]
-            return render_template('wygrana.html', m=m)
-
-    return render_template('index.html', plansza=plansza(), m = m, tura=wybor.tura)
+            m = wiadomosc.wypisz[2]
+        return render_template('plansza.html', plansza=plansza(),skreslenia=plansza.czyje(),tura =tura, m=m, g0=p0, g1=p1) 
+    
+    if tura == 0:
+        tura = 1
+    else:
+        tura = 0
+    return render_template('plansza.html', plansza=plansza(), skreslenia=plansza.czyje(), tura=tura, g0=p0, g1=p1, m=m)
 
 if __name__ == "__main__":
-   app.run(host="0.0.0.0", port=5000, debug=True)
+   app.run(host="0.0.0.0", port=8000, debug=True)
