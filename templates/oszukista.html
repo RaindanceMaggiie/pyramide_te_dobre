@@ -1,0 +1,11 @@
+{% extends "main.html" %}
+{% block body %}
+<div id="wspolrzedne">
+  {% if m %}
+    <p id="alert">{{m}}</p>
+  {% endif %}
+  <form action="/">
+    <input type="submit" value="Nowa gra">
+    </form>
+</div>
+{% endblock %}
